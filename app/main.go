@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"os"
 	"fmt"
+	"math/rand"
+	"time"
 )
 
 func main() {
@@ -16,7 +18,7 @@ func main() {
 	if scanner.Scan() {
 		line := scanner.Bytes()
 		fmt.Printf("入力された文字: %s\n", string(line))
-		SaveData1(path, line)
+		SaveData2(path, line)
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -26,18 +28,31 @@ func main() {
 }
 
 
-func SaveData1(path string, data []byte) error {
-	fp, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0664)
+func SaveData2(path string, data []byte) error {
+	rand.Seed(time.Now().UnixNano())
+	tmp := fmt.Sprintf("%s.%d.tmp", path, rand.Int())
+	fp, err := os.OpenFile(tmp, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0664)
 	if err != nil {
 		return err
 	}
 
-	defer fp.Close()
+	defer func(){
+		fp.Close()
+		// 正常に一時的なファイルが作成されている場合は削除する
+		if err != nil {
+			os.Remove(tmp)
+		}
+	}()
 
-	_, err = fp.Write(data)
-	if err != nil {
+	if _, err = fp.Write(data); err != nil {
 		return err
 	}
 
-	return fp.Sync()
+	if err = fp.Sync(); err != nil {
+		return err
+	}
+
+	err = os.Rename(tmp, path)
+
+	return err
 }
