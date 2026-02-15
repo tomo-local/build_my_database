@@ -36,6 +36,11 @@ func SaveData2(path string, data []byte) error {
 		return err
 	}
 
+	source, err := os.ReadFile(path)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
 	defer func(){
 		fp.Close()
 		// 正常に一時的なファイルが作成されている場合は削除する
@@ -44,8 +49,16 @@ func SaveData2(path string, data []byte) error {
 		}
 	}()
 
-	if _, err = fp.Write(data); err != nil {
+	if _, err = fp.Write(source); err != nil {
 		return err
+	}
+
+	if _, err =  fp.Write(data); err != nil {
+		return err
+	}
+
+	if _, err = fp.Write([]byte{'\n'}); err != nil {
+		return
 	}
 
 	if err = fp.Sync(); err != nil {
