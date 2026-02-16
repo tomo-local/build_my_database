@@ -20,3 +20,24 @@
 // 読み書き | 作成 | 追記
 flags := os.O_RDWR | os.O_CREATE | os.O_APPEND
 ```
+
+
+## Effective Go と Bare Return
+
+Bare Returnの書き方
+```go
+//                ここに戻り値の名前（val, ok, err）が定義されている
+func (kv *KV) Get(key []byte) (val []byte, ok bool, err error) {
+  val, ok =  kv.mem[string(key)]
+  return // 何も書かなくても、現在の val, ok, err の値が返される
+}
+```
+
+Effective Goの書き方
+```go
+func (kv *KV) Get(key []byte) ([]byte, bool, error) {
+    // 戻り値に名前を付けず、直接 return します
+    val, ok := kv.mem[string(key)]
+    return val, ok, nil
+}
+```
