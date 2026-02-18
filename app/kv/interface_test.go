@@ -2,12 +2,17 @@ package kv
 
 import (
 	"testing"
+	"os"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestKVBasic(t *testing.T) {
 	kv := KV{}
+	kv.log.FileName = ".test_db"
+	defer os.Remove(kv.log.FileName)
+
+	os.Remove(kv.log.FileName)
 	err := kv.Open()
 	assert.Nil(t, err)
 	defer kv.Close()
@@ -35,4 +40,17 @@ func TestKVBasic(t *testing.T) {
 	// データの削除の確認
 	_, ok, err = kv.Get([]byte("xxx"))
 	assert.True(t, !ok && err == nil)
+
+	updated, err = kv.Set([]byte("k2"), []byte("v2"))
+	assert.True(t, updated && err == nil)
+
+	// 再度開く
+	kv.Close()
+	err = kv.Open()
+	assert.Nil(t, err)
+
+	_, ok, err = kv.Get([]byte("k1"))
+	assert.True(t, !ok && err == nil)
+	val, ok, err = kv.Get([]byte("k2"))
+	assert.True(t, string(val) == "v2" && ok && err == nil)
 }
