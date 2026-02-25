@@ -1,4 +1,4 @@
-package db0202
+package table
 
 import (
 	"testing"
@@ -10,7 +10,7 @@ func TestRowEncode(t *testing.T) {
 	schema := &Schema{
 		Table: "link",
 		Cols: []Column{
-			{Name: "time", Type: TypeI64},
+			{Name: "time", Type: TypeInt64},
 			{Name: "src", Type: TypeStr},
 			{Name: "dst", Type: TypeStr},
 		},
@@ -18,7 +18,7 @@ func TestRowEncode(t *testing.T) {
 	}
 
 	row := Row{
-		Cell{Type: TypeI64, I64: 123},
+		Cell{Type: TypeInt64, Int64: 123},
 		Cell{Type: TypeStr, Str: []byte("a")},
 		Cell{Type: TypeStr, Str: []byte("b")},
 	}

@@ -36,7 +36,7 @@ func (row Row) EncodeKey(schema *Schema) []byte {
 			panic("type error")
 		}
 
-		if !slices.Contains(schema.PKey, idx) {
+		if slices.Contains(schema.PKey, idx) {
 			key = row[idx].Encode(key)
 		}
 	}
@@ -104,8 +104,8 @@ func (row Row) DecodeVal(schema *Schema, val []byte) error {
 			continue
 		}
 		row[idx] = Cell{Type: col.Type}
-		decodedVal, err := row[idx].Decode(val);
-		if  err != nil {
+		decodedVal, err := row[idx].Decode(val)
+		if err != nil {
 			return err
 		}
 		val = decodedVal
