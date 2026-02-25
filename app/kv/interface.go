@@ -39,21 +39,48 @@ func (kv *KV) Close() error { return kv.log.Close() }
 
 // 取得
 func (kv *KV) Get(key []byte) ([]byte, bool, error) {
-	val, ok :=  kv.mem[string(key)]
+	val, ok := kv.mem[string(key)]
 	return val, ok, nil
 }
-// 保存
-func (kv *KV) Set(key []byte, val []byte) (bool, error) {
+
+type UpdateMode int
+
+const (
+	ModeUpsert UpdateMode = 0 // 挿入または更新 (Upsert)
+	ModeInsert UpdateMode = 1 // 新規挿入のみ (Insert new)
+	ModeUpdate UpdateMode = 2 // 既存の更新のみ (Update existing)
+)
+
+func (kv *KV) SetEx(key []byte, val []byte, mode UpdateMode) (bool, error) {
 	prev, exist := kv.mem[string(key)]
-	kv.mem[string(key)] = val
-	updated := !exist || !bytes.Equal(prev, val)
+
+	var updated bool
+	switch mode {
+	case ModeUpsert:
+		updated = !exist || !bytes.Equal(prev, val)
+	case ModeInsert:
+		updated = !exist
+	case ModeUpdate:
+		updated = exist
+	default:
+		panic("unreachable")
+	}
+
 	if updated {
-		if err := kv.log.Write(&Entry{key:key, val:val}); err != nil {
+		if err := kv.log.Write(&Entry{key: key, val: val}); err != nil {
 			return false, err
 		}
+		kv.mem[string(key)] = val
 	}
+
 	return updated, nil
 }
+
+// 保存
+func (kv *KV) Set(key []byte, val []byte) (bool, error) {
+	return kv.SetEx(key, val, ModeUpsert)
+}
+
 // 削除
 func (kv *KV) Del(key []byte) (bool, error) {
 	_, deleted := kv.mem[string(key)]
